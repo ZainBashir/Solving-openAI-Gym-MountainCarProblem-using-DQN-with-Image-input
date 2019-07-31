@@ -177,41 +177,42 @@ I start by initializing my Mountain car environment using the command _gym.make(
 
 Following this, an object of the CarAgent class is initialized
 
-```             env = gym.make('MountainCar-v0').env
-                agent = CarAgent(env)
+```             
+        env = gym.make('MountainCar-v0').env
+        agent = CarAgent(env)
 ```
 
 Other parameters are also initilized. I have commented my code to provide a short description of what each parameter does.
 
 ```
-                stack_depth = 4
-                seq_memory = collections.deque(maxlen=stack_depth)
-                done = False
-                training = False
-                batch_size = 32
-                update_threshold = 35
-                save_threshold = 1000
-                episodes = 1000001
-                time_steps = 300
-                collect_experience = agent.memory.maxlen - 50000
-                frame_skip = 4
-                ep_reward = []
+        stack_depth = 4
+        seq_memory = collections.deque(maxlen=stack_depth)
+        done = False
+        training = False
+        batch_size = 32
+        update_threshold = 35
+        save_threshold = 1000
+        episodes = 1000001
+        time_steps = 300
+        collect_experience = agent.memory.maxlen - 50000
+        frame_skip = 4
+        ep_reward = []
 
 ```
 
 I then loop for each episode each time resetting the initial state and the episode reward. The initial state is formed by stacking the initial frame 4 times using the repeat function from numpy
 
 ```
-                for episode in range(1,episodes):
+        for episode in range(1,episodes):
 
-                    seq_memory.clear()
-                    initial_state = env.reset()
-                    current_image = env.render(mode = 'rgb_array')
-                    frame = agent.process_image(current_image)
-                    frame = frame.reshape(1, frame.shape[0], frame.shape[1])
-                    current_state = np.repeat(frame, stack_depth, axis=0)
-                    seq_memory.extend(current_state)
-                    episode_reward = 0
+            seq_memory.clear()
+            initial_state = env.reset()
+            current_image = env.render(mode = 'rgb_array')
+            frame = agent.process_image(current_image)
+            frame = frame.reshape(1, frame.shape[0], frame.shape[1])
+            current_state = np.repeat(frame, stack_depth, axis=0)
+            seq_memory.extend(current_state)
+            episode_reward = 0
 ```
 
 The same for loop contains another for loop to loop around all the steps for each episode. Each iteration of this second for loop does the following:
@@ -225,56 +226,56 @@ The same for loop contains another for loop to loop around all the steps for eac
 8) If with an episode, the car reaches the terminal state, break this innner for loop and start a new episode
 
 ```
-                for time in range(time_steps):
+        for time in range(time_steps):
     
-                        if time % frame_skip == 0:
-                            if training:
-                                agent.epsilon = agent.epsilon - agent.decay_factor
-                                agent.epsilon = max(agent.epsilon_min, agent.epsilon)
-                            if np.random.rand() <= agent.epsilon:
-                                action = env.action_space.sample()
-                            else:
-                                action = agent.greedy_action(current_state.reshape(1, current_state.shape[0]\
-                                                   , current_state.shape[1], current_state.shape[2]))
+                if time % frame_skip == 0:
+                    if training:
+                        agent.epsilon = agent.epsilon - agent.decay_factor
+                        agent.epsilon = max(agent.epsilon_min, agent.epsilon)
+                    if np.random.rand() <= agent.epsilon:
+                        action = env.action_space.sample()
+                    else:
+                        action = agent.greedy_action(current_state.reshape(1, current_state.shape[0]\
+                                           , current_state.shape[1], current_state.shape[2]))
 
-                        next_pos, reward, done, _ = env.step(action)
+                next_pos, reward, done, _ = env.step(action)
 
-                        next_frame = env.render(mode='rgb_array')
-                        next_frame = agent.process_image(next_frame)
-                        seq_memory.append(next_frame)
+                next_frame = env.render(mode='rgb_array')
+                next_frame = agent.process_image(next_frame)
+                seq_memory.append(next_frame)
 
-                        next_state = np.asarray(seq_memory)
-                        agent.memory.append([current_state, action, reward, next_state, done])
+                next_state = np.asarray(seq_memory)
+                agent.memory.append([current_state, action, reward, next_state, done])
 
-                        current_state = next_state
+                current_state = next_state
 
-                        if len(agent.memory) == collect_experience:
-                            training = True
-                            print('Start training')
+                if len(agent.memory) == collect_experience:
+                    training = True
+                    print('Start training')
 
-                        if training:
-                            states, action_mask, targets = agent.calculate_targets(batch_size)
-                            agent.train_from_experience(states,action_mask, targets)
+                if training:
+                    states, action_mask, targets = agent.calculate_targets(batch_size)
+                    agent.train_from_experience(states,action_mask, targets)
 
-                        episode_reward = episode_reward + reward
+                episode_reward = episode_reward + reward
 
-                        if done:
-                            break
+                if done:
+                    break
 ```
 
 At the end of each episode I append the total episode reward in a list while simultanously printing it. After a certain number of episodes (35 in my case) I update the my target model's weights with the learnig model's weights and I save my model's weights each 1000 episodes
 
 ```
-                ep_reward.append([episode, episode_reward])
-                print("episode: {}/{}, epsilon: {}, episode reward: {}".format(episode, episodes, agent.epsilon,episode_reward))
+        ep_reward.append([episode, episode_reward])
+        print("episode: {}/{}, epsilon: {}, episode reward: {}".format(episode, episodes, agent.epsilon,episode_reward))
 
-                if training and (episode % update_threshold) == 0:
-                        print('Weights updated at epsisode:', episode)
-                        agent.update_target_weights()
+        if training and (episode % update_threshold) == 0:
+                print('Weights updated at epsisode:', episode)
+                agent.update_target_weights()
 
-                if training and (episode%save_threshold) == 0:
-                        print('Data saved at epsisode:', episode)
-                        agent.save_model('./train_8/DQN_CNN_model_{}.h5'.format(episode))
-                        pickle.dump(ep_reward, open('./train_8/rewards_{}.dump'.format(episode), 'wb'))
+        if training and (episode%save_threshold) == 0:
+                print('Data saved at epsisode:', episode)
+                agent.save_model('./train_8/DQN_CNN_model_{}.h5'.format(episode))
+                pickle.dump(ep_reward, open('./train_8/rewards_{}.dump'.format(episode), 'wb'))
 
         ```
