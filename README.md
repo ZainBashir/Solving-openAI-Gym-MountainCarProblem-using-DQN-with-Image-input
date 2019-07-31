@@ -276,18 +276,24 @@ At the end of each episode I append the total episode reward in a list while sim
         if training and (episode%save_threshold) == 0:
                 print('Data saved at epsisode:', episode)
                 agent.save_model('./train_8/DQN_CNN_model_{}.h5'.format(episode))
-                pickle.dump(ep_reward, open('./train_8/rewards_{}.dump'.format(episode), 'wb'))
-
-        ```
+               pickle.dump(ep_reward, open('./train_8/rewards_{}.dump'.format(episode), 'wb'))
+```
 
 I have uploaded all the code in my repository. I am not an expert so you might find some incorrect things as well and this was intended to get an insight into the actual DQN algorithm. I found a lot of useful code and tutorials online which helped me complete this task so please make sure to refer to them as well:
 
-1) [https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26]
-2) [https://yanpanlau.github.io/2016/07/10/FlappyBird-Keras.html]
-3) [https://github.com/yilundu/DQN-DDQN-on-Space-Invaders]
-4) [https://github.com/boyuanf/DeepQLearning]
-5) [https://github.com/fg91/Deep-Q-Learning]
-6) [https://danieltakeshi.github.io/2016/11/25/frame-skipping-and-preprocessing-for-deep-q-networks-on-atari-2600-games/]
+1) (https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26)
 
-And I found this particularly useful to understand the DQN algorithm implementation at a very basic level although this deals with position and velocity values of the car as the input to a very simple neural network.
-7) [https://github.com/pylSER/Deep-Reinforcement-learning-Mountain-Car]
+2) (https://yanpanlau.github.io/2016/07/10/FlappyBird-Keras.html)
+
+3) (https://github.com/yilundu/DQN-DDQN-on-Space-Invaders)
+
+4) (https://github.com/boyuanf/DeepQLearning)
+
+5) (https://github.com/fg91/Deep-Q-Learning)
+
+6) (https://danieltakeshi.github.io/2016/11/25/frame-skipping-and-preprocessing-for-deep-q-networks-on-atari-2600-games/)
+
+
+And I found this one particularly useful to understand the DQN algorithm implementation at a very basic level although this deals with position and velocity values of the car as the input to a very simple neural network:
+
+7) (https://github.com/pylSER/Deep-Reinforcement-learning-Mountain-Car)
