@@ -72,8 +72,7 @@ The replay memory is initilized using the FIFO type deque memory from python col
 ```     
         import collections
         
-        self.memory = collections.deque(maxlen=200000)
-        
+        self.memory = collections.deque(maxlen=200000)        
         def memorize(self, current_state, action, reward, next_state, done):     
                 self.memory.append([current_state, action, reward, next_state, done])
 ```
@@ -143,7 +142,6 @@ And the one hot-function is given as:
 
                 actions = np.array(actions)
                 one_hots = np.zeros((len(actions), self.num_actions))
-
                 one_hots[:, 0][np.where(actions == 0)] = 1
                 one_hots[:,1][np.where(actions == 1)] = 1
                 one_hots[:, 2][np.where(actions == 2)] = 1
@@ -153,4 +151,8 @@ And the one hot-function is given as:
 
 This function performs the actual model fitting or weight update. The current states, action mask and the targets (labels) for these states which are returned by _calculate_targets_ function are passed as inputs to the _fit_ function or _train_from_batch_ function of the keras API. The _fit_ function works by first predicting the output for a given state and then comparing these predictions against the provided labels to see how far was the model's estimate from the desired value. It then updates the model's weights to make sure the the next predicitons are closer to the desired value. This is where the action mask returned from the _calculate_targets_ function helps us.
 
-Lets assume that one sample
+Lets assume that an arbitrary sample contains the action to 'go left (0)' in one state to take it to the next state. Now in this next state the best action to take (the one with the max q-value) is to 'go right (2)'. How then will we calculate the Bellman error when you have to subtract two values located at different indices? The action mask that is generated is one hot corresponding to the index of the action that was originally taken in the current state. This mask when multiplied by the prediction of our learning model keeps only the q-value of the action taken and zeroes out the other values. This same mask when multiplied by targets[:,None] keeps the maxmium q-value of all three actions at the index corresponding to the same action that was taken earlier. This allows for a simple subtraction of the two terms to calculate the Bellman error in a vectorized way:
+
+
+![alt](http://bit.ly/2Zn5E2z)
+
