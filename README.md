@@ -156,3 +156,125 @@ Lets assume that an arbitrary sample contains the action to 'go left (0)' in one
 
 ![alt](http://bit.ly/2Zn5E2z)
 
+
+All of the above is handled by the keras _fit_ function which is implemented in my code as
+
+```
+        def train_from_experience(self, states, action_mask, targets ):
+
+                labels = action_mask * targets[:, None]
+                loss = self.model.train_on_batch([states, action_mask], labels)
+```
+
+## Saving the model 
+
+Keras API provides a save method for each model object. This save method saves both the model architecture and its weights.
+I use this function every 1000 episodes to save my model's weights for evaluation purposes although a better approach would be to save the model architecture only once and save the weights evrey certain number of frames or episodes. The second approach is also very easy to implement using keras.
+
+## Main script
+
+I start by initializing my Mountain car environment using the command _gym.make('MountainCar-v0').env_. The _env_ at the end allows me to remove any upper bounds on the number of allowed steps to complete each episode. If I do not use this, the number of allowed steps is fixed at 200. In my experience this many steps are not enough to train your model. The reason being that during the exploration stage when the car is taking random actions, it is very difficult for it to earn some rewards within 200 steps mainly because our reward is very sparse (only achieved upon reaching the goal). To train a model with 200 steps per episode my intuition is to modify the reward function so that the car gets some intermediate rewards during the episode or to change the exploration strategy such a way that the car is able to reach the terminal state at least a few ocassions within 200 steps.
+
+Following this, an object of the CarAgent class is initialized
+
+```             env = gym.make('MountainCar-v0').env
+                agent = CarAgent(env)
+```
+
+Other parameters are also initilized. I have commented my code to provide a short description of what each parameter does.
+
+```
+                stack_depth = 4
+                seq_memory = collections.deque(maxlen=stack_depth)
+                done = False
+                training = False
+                batch_size = 32
+                update_threshold = 35
+                save_threshold = 1000
+                episodes = 1000001
+                time_steps = 300
+                collect_experience = agent.memory.maxlen - 50000
+                frame_skip = 4
+                ep_reward = []
+
+```
+
+I then loop for each episode each time resetting the initial state and the episode reward. The initial state is formed by stacking the initial frame 4 times using the repeat function from numpy
+
+```
+                for episode in range(1,episodes):
+
+                    seq_memory.clear()
+                    initial_state = env.reset()
+                    current_image = env.render(mode = 'rgb_array')
+                    frame = agent.process_image(current_image)
+                    frame = frame.reshape(1, frame.shape[0], frame.shape[1])
+                    current_state = np.repeat(frame, stack_depth, axis=0)
+                    seq_memory.extend(current_state)
+                    episode_reward = 0
+```
+
+The same for loop contains another for loop to loop around all the steps for each episode. Each iteration of this second for loop does the following:
+1) Decay epsilon
+2) Calculate a new action (greedy or random) every 4th frame
+3) If a new action is calculated, use that to enter the next state otherwise repeat the previously calculated action to enter    the next state and earn the reward
+4) Capture the frame after entering the new state, process this frame and push this to the intermediate memory. This new        frame along with 3 previous frames makes the next state.
+5) Store this experience sample which is made up by the current state, action, reward, next state and done flag, in the          replay memory
+6) Set the next state as the current state to calculate the new action
+7) Once the replay memory has enough experience samples stored in it (150000 frames in my case), start training the model
+8) If with an episode, the car reaches the terminal state, break this innner for loop and start a new episode
+
+```
+                for time in range(time_steps):
+    
+                        if time % frame_skip == 0:
+                            if training:
+                                agent.epsilon = agent.epsilon - agent.decay_factor
+                                agent.epsilon = max(agent.epsilon_min, agent.epsilon)
+                            if np.random.rand() <= agent.epsilon:
+                                action = env.action_space.sample()
+                            else:
+                                action = agent.greedy_action(current_state.reshape(1, current_state.shape[0]\
+                                                   , current_state.shape[1], current_state.shape[2]))
+
+                        next_pos, reward, done, _ = env.step(action)
+
+                        next_frame = env.render(mode='rgb_array')
+                        next_frame = agent.process_image(next_frame)
+                        seq_memory.append(next_frame)
+
+                        next_state = np.asarray(seq_memory)
+                        agent.memory.append([current_state, action, reward, next_state, done])
+
+                        current_state = next_state
+
+                        if len(agent.memory) == collect_experience:
+                            training = True
+                            print('Start training')
+
+                        if training:
+                            states, action_mask, targets = agent.calculate_targets(batch_size)
+                            agent.train_from_experience(states,action_mask, targets)
+
+                        episode_reward = episode_reward + reward
+
+                        if done:
+                            break
+```
+
+At the end of each episode I append the total episode reward in a list while simultanously printing it. After a certain number of episodes (35 in my case) I update the my target model's weights with the learnig model's weights and I save my model's weights each 1000 episodes
+
+```
+                ep_reward.append([episode, episode_reward])
+                print("episode: {}/{}, epsilon: {}, episode reward: {}".format(episode, episodes, agent.epsilon,episode_reward))
+
+                if training and (episode % update_threshold) == 0:
+                        print('Weights updated at epsisode:', episode)
+                        agent.update_target_weights()
+
+                if training and (episode%save_threshold) == 0:
+                        print('Data saved at epsisode:', episode)
+                        agent.save_model('./train_8/DQN_CNN_model_{}.h5'.format(episode))
+                        pickle.dump(ep_reward, open('./train_8/rewards_{}.dump'.format(episode), 'wb'))
+
+        ```
