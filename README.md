@@ -2,6 +2,7 @@
 I have targeted to solve a benchmark problem in Reinforcement learning literature using Deep Q-networks with images as the only input to the model. Keras was used to model the Convolutional neural network which predicts the best action to take in a given state. I was unable to find a comprehensive tutorial which implements the the DQN algorithm to solve the mountain car problem with images as the only input to the CNN model so came up with this with help from a lot of different tutorials to get my code working and will reference all of them below.
 
 The file named _DQN_CNN_Complete.py_ is to train the model
+
 The file named _test_DQN_CNN.py_ is to evaluate/test the trained model
 
 ## Problem setup
