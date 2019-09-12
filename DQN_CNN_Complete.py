@@ -322,7 +322,6 @@ for episode in range(1,episodes):
         #If the replay memory has a minimum number of experience samples, start training the network
         if len(agent.memory) == collect_experience:
             training = True
-            time_steps = 200
             print('Start training')
 
         #The actual training command. First calculate the targets for each batch and the action mask
