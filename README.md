@@ -16,14 +16,14 @@ The following is a graphical description of the CNN model
 
 ![alt](images-tutorial/model.png)
 
-Our model takes in two inputs; a stack of 4 gray scale images and an action mask. The action mask multiples with the output of our model. This encodes our Q-values in a one-hot style with the hot value corresponidng to the action index.
+Our model takes in two inputs; a stack of 4 gray scale images and an action mask. The action mask multiples with the output of our model. This encodes our Q-values in a one-hot style with the hot value corresponding to the action index.
 
 ```
         input_shape = (self.stack_depth, self.image_height, self.image_width)
         actions_input = layers.Input((self.num_actions,), name = 'action_mask')
 ```
 Thus the input layer is defined as the size [None,4,100,150]. The None here signifies the unkown batch size we are going to
-feed our model.
+feed into our model.
 
  ```
         frames_input = layers.Input(input_shape, name='input_layer')
