@@ -85,7 +85,7 @@ The replay memory is initilized using the FIFO type deque memory from python col
 
 ## Processing input images
 
-The processing applied to input images is very simple. I convert the RGB iamges to gray scale and scale them down by a factor of 4 resulting in a 150x100 image. The aspect ratio was kept constant while down scaling.
+The processing applied to input images is very simple. I convert the RGB images to gray scale and scale them down by a factor of 4 resulting in a 150x100 image. The aspect ratio was kept constant while down scaling.
 
 ## Calculating targets
 
