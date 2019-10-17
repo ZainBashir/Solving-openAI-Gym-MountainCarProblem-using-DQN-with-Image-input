@@ -285,7 +285,7 @@ At the end of each episode I append the total episode reward in a list while sim
                pickle.dump(ep_reward, open('./train_8/rewards_{}.dump'.format(episode), 'wb'))
 ```
 
-I have uploaded all the code in my repository. I am not an expert so you might find some incorrect things as well and this was intended to get an insight into the actual DQN algorithm. I found a lot of useful code and tutorials online which helped me complete this task so please make sure to refer to them as well:
+I have uploaded all the code in my repository. Since I am not an expert, finding errors with my approach is possible. This excercise was only intended to get an insight into the actual DQN algorithm. I found a lot of useful code and tutorials online which helped me complete this task so please make sure to refer to them as well:
 
 1) (https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26)
 
