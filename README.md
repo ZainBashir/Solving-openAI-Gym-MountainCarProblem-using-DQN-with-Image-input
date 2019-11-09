@@ -22,8 +22,8 @@ Our model takes in two inputs; a stack of 4 gray scale images and an action mask
         input_shape = (self.stack_depth, self.image_height, self.image_width)
         actions_input = layers.Input((self.num_actions,), name = 'action_mask')
 ```
-Thus the input layer is defined as the size [None,4,100,150]. The None here signifies the unkown batch size we are going to
-feed into our model.
+Thus the input layer is defined to be of size [None,4,100,150]. The None here signifies the unkown batch size we are going to
+feed to our model.
 
  ```
         frames_input = layers.Input(input_shape, name='input_layer')
@@ -36,7 +36,7 @@ In my case I have set the image format in Keras backend as 'Channels first' (no 
         keras.backend.set_image_data_format('channels_first')
 ```
 
-Next we define the core layers of our model exactly the same parameters as defined in the original DQN paper. I took help from this very nice tutorial to define my model and also use the action mask technique to vectorize my code (https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26)
+Next we define the core layers of our model with exactly the same parameters as defined in the original DQN paper. I took help from this very nice tutorial to define my model and to use the action mask technique to vectorize my code (https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26)
 
 ```
         conv_1 = layers.Conv2D(32, (8,8), strides=4, padding ='same'\
@@ -63,7 +63,7 @@ The main model is followed by a multiplication layer which multiplies the input 
         masked_output = layers.Multiply(name='masked_output')([output, actions_input])
 ```
 
-We finally compile our model with the right optimizer, its learning rate and other parameters. I chose Huber loss but the model can be trained with mean square loss as well. In my case I tried to train with the RMSprop optimizer but I couldn't figure out the reason why my trained model failed to make good predictions although my training average trainig reward increased during traing. Using the Adam optimizer resulted in a high training and evaluation rewards. 
+We finally compile our model with the right optimizer, its learning rate and other parameters. I chose Huber loss but the model can be trained with mean square loss as well. In my case I tried to train with the RMSprop optimizer but I couldn't figure out the reason why my trained model failed to make good predictions although my average training reward increased during training. Using the Adam optimizer resulted in a high training and evaluation rewards. 
 
 ```
         model = Model(input = [frames_input, actions_input], output=[masked_output])
@@ -73,7 +73,7 @@ We finally compile our model with the right optimizer, its learning rate and oth
 
 ## Replay memory
 
-The replay memory is initilized using the FIFO type deque memory from python collections library. We can define a maximum length for this memory type and once the memory is full, the oldest data samples are discarded from the other side as new samples are added. We use this memory to store experience samples as soon as they are generated. An experience sample includes the _state_ you start in, the _action_ (random or greedy) you take in that state, the _reward_ associated with this state action pair , the _next state_ you enter after taking the action, and the _done_ flag indicating if the _next state_ is a terminal state or not.
+The replay memory is initilized using the FIFO type deque memory from python collections library. I can define a maximum length for this memory type and once the memory is full, the oldest data samples are discarded from the other side as new samples are added. I use this memory to store experience samples as soon as they are generated. An experience sample includes the _state_ you start in, the _action_ (random or greedy) you take in that state, the _reward_ associated with this state action pair , the _next state_ you enter after taking the action, and the _done_ flag indicating if the _next state_ is a terminal state or not.
 
 ```     
         import collections
@@ -85,11 +85,11 @@ The replay memory is initilized using the FIFO type deque memory from python col
 
 ## Processing input images
 
-The processing applied to input images is very simple. I convert the RGB images to gray scale and scale them down by a factor of 4 resulting in a 150x100 image. The aspect ratio was kept constant while down scaling.
+The processing applied to the input images is very simple. I convert the RGB images to gray scale and scale them down by a factor of 4 resulting in a 150x100 image. The aspect ratio was kept constant while down scaling.
 
 ## Calculating targets
 
-To calculate the TD targets for a given batch size, we first sample our reply memory randomly to get a batch of experience samples. This is followed by extracting each component of the experience sample using a for loop. I then cnormalize the image data (current states and next states). We could have normalized the images while processing the frames but normalized images are of type float32 while non noramalized ones are of type uint8. The latter takes up less memory when storing in the replay memory.
+To calculate the TD targets for a given batch size, I first sample my reply memory randomly to get a batch of experience samples. This is followed by extracting each component of the experience sample using a for loop. I then normalize the image data (current states and next states). I could have normalized the images while processing the frames but normalized images are of type float32 while non noramalized ones are of type uint8. The latter takes up less memory when storing in the replay memory.
 
 ```
         def calculate_targets(self, batch_size):
@@ -121,7 +121,7 @@ Following the Bellman equation we have to calculate the TD targets as:
 
 ![alt](http://bit.ly/2GCfVAO)
 
-The Q-values of all the actions in the next state is calculated by passing the next state and an input mask of all ones to the target model. This mask allows us to output all the Q-values associated to the 3 actions in the next state. We need all three q-values because we will take the max value to deicide the next best action. The action mask is replicated to allow multiplication with all the q-values all the states in the training batch.
+The Q-values of all the actions in the next state are calculated by passing the next state and an input mask of all ones to the target model. This mask allows me to output all the Q-values associated to the 3 actions in the next state. I need all three q-values because Iam going to take the max value to deicide the next best action. The action mask is replicated to allow multiplication with all the q-values all the states in the training batch.
 
 ```
         action_mask = np.ones((1,self.num_actions))
@@ -135,7 +135,7 @@ If the next state is a terminal state the q-values for all actions is set to zer
         next_Q_values[dones] = 0
         targets = rewards + self.discount_factor * np.max(next_Q_values, axis=1)
 ```     
-At this stage we also calculate the one-hot action mask for our target values. This one hot value corresponds to the index of the action taken in the current state to take the car to the next state.
+At this stage I also calculate the one-hot action mask for my target values. This one hot value corresponds to the index of the action taken in the current state to take the car to the next state.
 
 ```
         action_mask_current = self.get_one_hot(actions)
@@ -155,9 +155,9 @@ And the one hot-function is given as:
 
 ## Train function
 
-This function performs the actual model fitting or weight update. The current states, action mask and the targets (labels) for these states which are returned by _calculate_targets_ function are passed as inputs to the _fit_ function or _train_from_batch_ function of the keras API. The _fit_ function works by first predicting the output for a given state and then comparing these predictions against the provided labels to see how far was the model's estimate from the desired value. It then updates the model's weights to make sure the the next predicitons are closer to the desired value. This is where the action mask returned from the _calculate_targets_ function helps us.
+This function performs the actual model fitting or weight update. The current states, action mask and the targets (labels) for these states which are returned by _calculate_targets_ function are passed as inputs to the _fit_ function or _train_from_batch_ function of the keras API. The _fit_ function works by first predicting the output for a given state and then comparing these predictions against the provided labels to see how far was the model's estimate from the desired value. It then updates the model's weights to make sure the the next predicitons are closer to the desired value. This is where the action mask returned from the _calculate_targets_ function helps me.
 
-Lets assume that an arbitrary sample contains the action to 'go left (0)' in one state to take it to the next state. Now in this next state the best action to take (the one with the max q-value) is to 'go right (2)'. How then will we calculate the Bellman error when you have to subtract two values located at different indices? The action mask that is generated is one hot corresponding to the index of the action that was originally taken in the current state. This mask when multiplied by the prediction of our learning model keeps only the q-value of the action taken and zeroes out the other values. This same mask when multiplied by targets[:,None] keeps the maxmium q-value of all three actions at the index corresponding to the same action that was taken earlier. This allows for a simple subtraction of the two terms to calculate the Bellman error in a vectorized way:
+Lets assume that an arbitrary sample contains the action to 'go left (0)' in the current state in order to take it to the next state. Now in this next state the best action to take (the one with the max q-value) is to 'go right (2)'. How then will we calculate the Bellman error when you have to subtract two values located at different indices? The action mask that is generated is one hot corresponding to the index of the action that was originally taken in the current state. This mask when multiplied by the prediction of our learning model keeps only the q-value of the action taken and zeroes out the other values. This same mask when multiplied with targets[:,None] keeps the maxmium q-value of all three actions at the index corresponding to the same action that was taken earlier. This allows for a simple subtraction of the two terms to calculate the Bellman error in a vectorized way:
 
 
 ![alt](http://bit.ly/2Zn5E2z)
@@ -179,7 +179,7 @@ I use this function every 1000 episodes to save my model's weights for evaluatio
 
 ## Main script
 
-I start by initializing my Mountain car environment using the command _gym.make('MountainCar-v0').env_. The _env_ at the end allows me to remove any upper bounds on the number of allowed steps to complete each episode. If I do not use this, the number of allowed steps is fixed at 200. In my experience this many steps are not enough to train your model. The reason being that during the exploration stage when the car is taking random actions, it is very difficult for it to earn some rewards within 200 steps mainly because our reward is very sparse (only achieved upon reaching the goal). To train a model with 200 steps per episode my intuition is to modify the reward function so that the car gets some intermediate rewards during the episode or to change the exploration strategy such a way that the car is able to reach the terminal state at least a few ocassions within 200 steps.
+I start by initializing my Mountain car environment using the command _gym.make('MountainCar-v0').env_. The _env_ at the end allows me to remove any upper bounds on the number of allowed steps to complete each episode. If I do not use this, the number of allowed steps is fixed at 200. In my experience this many steps are not enough to train my model if I am using images as the the state input. The reason being that during the exploration stage when the car is taking random actions, it is very difficult for it to earn some rewards within 200 steps mainly because our reward is very sparse (only achieved upon reaching the goal). To train a model with 200 steps per episode, my intuition is to modify the reward function so that the car gets some intermediate rewards during the episode or to change the exploration strategy such a way that the car is able to reach the terminal state at least a few ocassions within 200 steps.
 
 Following this, an object of the CarAgent class is initialized
 
@@ -221,7 +221,7 @@ I then loop for each episode each time resetting the initial state and the episo
             episode_reward = 0
 ```
 
-The same for loop contains another for loop to loop around all the steps for each episode. Each iteration of this second for loop does the following:
+The same for loop contains another for loop to go through all the steps for each episode. Each iteration of this second for loop does the following:
 1) Decay epsilon
 2) Calculate a new action (greedy or random) every 4th frame
 3) If a new action is calculated, use that to enter the next state otherwise repeat the previously calculated action to enter    the next state and earn the reward
@@ -229,7 +229,7 @@ The same for loop contains another for loop to loop around all the steps for eac
 5) Store this experience sample which is made up by the current state, action, reward, next state and done flag, in the          replay memory
 6) Set the next state as the current state to calculate the new action
 7) Once the replay memory has enough experience samples stored in it (150000 frames in my case), start training the model
-8) If with an episode, the car reaches the terminal state, break this innner for loop and start a new episode
+8) If within an episode the car reaches the terminal state break this innner for loop and start a new episode
 
 ```
         for time in range(time_steps):
@@ -269,7 +269,7 @@ The same for loop contains another for loop to loop around all the steps for eac
                     break
 ```
 
-At the end of each episode I append the total episode reward in a list while simultanously printing it. After a certain number of episodes (35 in my case) I update the my target model's weights with the learnig model's weights and I save my model's weights each 1000 episodes
+At the end of each episode I append the total episode reward in a list while simultaneously printing it. After a certain number of episodes (35 in my case) I update the my target model's weights with the learning model's weights and I save my model's weights each 1000 episodes
 
 ```
         ep_reward.append([episode, episode_reward])
