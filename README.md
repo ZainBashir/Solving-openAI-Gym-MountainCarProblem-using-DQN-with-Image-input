@@ -5,7 +5,7 @@ The file named _DQN_CNN_Complete.py_ is to train the model
 
 The file named _test_DQN_CNN.py_ is to evaluate/test the trained model
 
-The file named _plot_rewards.py_ is used to plot immediate episode rewards and average episode rewards saved the the _.dump_ files during training
+The file named _plot_rewards.py_ is used to plot immediate episode rewards and average episode rewards saved in the _.dump_ files during training
 
 ## Problem setup
 A car which starts at the bottom of the mountain has to climb up the mountain but doesn't have enough engine power to take it to the top without taking help from gravity. Therefore the car has to learn to go left and take help from gravity as well as its engine to reach its goal. The observation space is continous with position values ranging from -1.2 to 0.5. The action space is discreet and the car can either move left (1), do nothing (0) or move right (2).
