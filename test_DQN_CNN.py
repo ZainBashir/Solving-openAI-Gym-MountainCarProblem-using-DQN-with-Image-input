@@ -5,6 +5,9 @@
 
 import gym
 import tensorflow as tf
+
+#important to use the same keras version for loading the model as used for training/saving the model. I used 2.0.8
+#and tested on 2.2.4 which gave me an error of not being able to load the saved model correctly.
 import keras
 import numpy as np
 import cv2
